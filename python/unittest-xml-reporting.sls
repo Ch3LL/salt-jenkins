@@ -5,7 +5,7 @@ include:
 
 unittest-xml-reporting:
   pip.installed:
-    - name: 'unittest-xml-reporting==2.2.1'
+    - name: 'unittest-xml-reporting==2.5.1'
 {%- if grains['os'] not in ('Windows',) %}
     - require:
       - cmd: pip-install
