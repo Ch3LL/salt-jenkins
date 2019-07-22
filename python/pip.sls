@@ -11,6 +11,12 @@
   {%- set on_redhat_6 = False %}
 {%- endif %}
 
+{%- if os_family == 'RedHat' and os_major_release == 2018 %}
+  {%- set on_amazonlinux_1 = True %}
+{%- else %}
+  {%- set on_amazonlinux_1 = False %}
+{%- endif %}
+
 {%- if os_family == 'RedHat' and os_major_release == 7 %}
   {%- set on_redhat_7 = True %}
 {%- else %}
@@ -35,6 +41,12 @@
   {%- set on_ubuntu_14 = False %}
 {%- endif %}
 
+{%- if grains['os'] == 'MacOS' %}
+  {%- set on_macos = True %}
+{%- else %}
+  {%- set on_macos = False %}
+{%- endif %}
+
 {%- if os_family == 'Windows' %}
   {%- set on_windows=True %}
 {%- else %}
@@ -55,7 +67,7 @@
   {%- set python2 = 'c:\\\\Python27\\\\python.exe' %}
   {%- set python3 = 'c:\\\\Python35\\\\python.exe' %}
 {%- else %}
-  {%- if on_redhat_6 %}
+  {%- if on_redhat_6 or on_amazonlinux_1 %}
     {%- set python2 = 'python2.7' %}
   {%- else %}
     {%- set python2 = 'python2' %}
@@ -93,10 +105,21 @@ include:
 {%- if on_debian_7 %}
   - python.headers
 {%- endif %}
+  {%- if install_pip3 and grains['os'] == 'Ubuntu' and os_major_release >= 18 %}
+  - python.distutils
+  {%- endif %}
   - noop-placeholder {#- Make sure there's at least an entry in this 'include' statement #}
 
 {%- set get_pip2 = '{} {} {}'.format(python2, get_pip_path, force_reinstall) %}
 {%- set get_pip3 = '{} {} {}'.format(python3, get_pip_path, force_reinstall) %}
+
+{%- if on_macos %}
+pip-update-path:
+   environ.setenv:
+     - name: PATH
+     - value: '/opt/salt/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/salt/bin:/usr/local/sbin:$PATH'
+     - update_minion: True
+{%- endif %}
 
 pip-install:
   cmd.run:
@@ -135,6 +158,9 @@ pip3-install:
       {%- endif %}
     - require:
       - download-get-pip
+    {%- if install_pip3 and grains['os'] == 'Ubuntu' and os_major_release >= 18 %}
+      - python3-distutils
+    {%- endif %}
     {%- if pillar.get('py3', False) %}
       - python3
     {%- else %}
