@@ -37,8 +37,8 @@
   {%- endif %}
 {%- endif %}
 
-{%- set dev_reqs = ['mock', 'apache-libcloud>=0.14.0', 'boto>=2.32.1', 'boto3>=1.2.1', 'moto>=0.3.6', 'SaltTesting>=2016.10.26', 'SaltPyLint'] %}
-{%- set base_reqs = ['Jinja2', 'msgpack-python>0.3', 'PyYAML', 'MarkupSafe', 'requests>=1.0.0', 'tornado%s'|format(salt.pillar.get('tornado:version', '<5.0.0'))] %}
+{%- set dev_reqs = ['SaltPyLint'] %}
+{%- set base_reqs = ['MarkupSafe', 'tornado%s'|format(salt.pillar.get('tornado:version', '<5.0.0'))] %}
 
 include:
   {%- if grains.get('kernel') == 'Linux' %}
@@ -161,7 +161,7 @@ include:
   - python.dns
   - python.croniter
   - cron
-  {%- if (grains['os'] not in ['Debian', 'Ubuntu', 'SUSE', 'openSUSE', 'Windows'] and not grains['osrelease'].startswith('5.')) or (grains['os'] == 'Ubuntu' and grains['osrelease'].startswith('14.')) %}
+  {%- if (grains['os'] not in ['Amazon', 'Debian', 'Ubuntu', 'SUSE', 'openSUSE', 'Windows'] and not grains['osrelease'].startswith('5.')) or (grains['os'] == 'Ubuntu' and grains['osrelease'].startswith('14.')) %}
   - npm
   - bower
   {%- endif %}
@@ -189,17 +189,12 @@ include:
   - openssl-dev
   {%- endif %}
   - python.salttesting
-  {%- if grains['os'] != 'Ubuntu' or (grains['os'] == 'Ubuntu' and not grains['osrelease'].startswith('12.')) %}
-  - python.pytest
-  - python.pytest-tempdir
-  - python.pytest-helpers-namespace
   - python.pytest-salt
-  {%- endif %}
   {%- if grains['os'] in ['CentOS', 'Debian', 'Fedora', 'FreeBSD', 'MacOS' , 'Ubuntu'] %}
   - python.junos-eznc
   - python.jxmlease
   {%- endif %}
-  {%- if os_family in ('Arch', 'RedHat', 'Debian') %}
+  {%- if grains['os'] not in ('Amazon',) and os_family in ('Arch', 'RedHat', 'Debian') %}
   - nginx
   {%- endif %}
   - python.pyyaml
@@ -337,7 +332,7 @@ clone-salt-repo:
       - cmd: python-zypp
       {%- endif %}
       - pip: dnspython
-      {%- if (grains['os'] not in ['Debian', 'Ubuntu', 'SUSE', 'openSUSE'] and not grains['osrelease'].startswith('5.')) or (grains['os'] == 'Ubuntu' and grains['osrelease'].startswith('14.')) %}
+      {%- if (grains['os'] not in ['Amazon', 'Debian', 'Ubuntu', 'SUSE', 'openSUSE'] and not grains['osrelease'].startswith('5.')) or (grains['os'] == 'Ubuntu' and grains['osrelease'].startswith('14.')) %}
       {%- if grains['os'] not in ('MacOS', 'Windows') %}
       - pkg: npm
       - npm: bower
@@ -364,7 +359,7 @@ clone-salt-repo:
       {%- if grains['os'] == 'Debian' and grains['osrelease'].startswith('8') %}
       - pkg: openssl-dev-libs
       {%- endif %}
-      {%- if os_family in ('Arch', 'RedHat', 'Debian') %}
+      {%- if grains['os'] not in ('Amazon',) and os_family in ('Arch', 'RedHat', 'Debian') %}
       - pkg: nginx
       {%- endif %}
       {%- if os_family == 'Arch' %}
@@ -413,10 +408,6 @@ install-base-{{ req }}:
     - name: {{ req }}
 {%- endfor %}
 
-install-salt-pytest-pip-deps:
-  pip.installed:
-    - requirements: {{ testing_dir }}/requirements/pytest.txt
-    - onlyif: '[ -f {{ testing_dir }}/requirements/pytest.txt ]'
 {%- endif %}
 
 {#- npm v5 workaround for issue #41770 #}

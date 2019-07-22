@@ -50,10 +50,18 @@ accept_LANG_sshd:
   file.append:
     - name: /etc/ssh/sshd_config
     - text: AcceptEnv LANG
+  {%- if not pillar.get('packer_golden_images_build', False) %}
   service.running:
     - name: sshd
     - listen:
       - file: accept_LANG_sshd
+  {%- endif %}
+{%- endif %}
+
+{%- if grains['os'] == 'Fedora' %}
+fedora_locale:
+  pkg.installed:
+    - name: glibc-langpack-en
 {%- endif %}
 
 us_locale:

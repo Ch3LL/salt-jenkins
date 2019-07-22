@@ -18,6 +18,12 @@
 {%- if grains['os'] == 'Windows' %}
 include:
   - windows.repo
+{%- elif os_family == 'Debian' %}
+include:
+  - python.apt
+  {%- if pillar.get('py3', False) and grains['os'] == 'Ubuntu' and os_major_release >= 18 %}
+  - python.distutils
+  {%- endif %}
 {%- endif %}
 
 python3:
@@ -27,7 +33,7 @@ python3:
     - aggregate: True
     {%- else %}
     - aggregate: False
-    - version: '3.5.2150.0'
+    - version: '3.5.4150.0'
     - extra_install_flags: "TargetDir=C:\\Python35 Include_doc=0 Include_tcltk=0 Include_test=0 Include_launcher=1 PrependPath=1 Shortcuts=0"
     - require:
       - win-pkg-refresh
